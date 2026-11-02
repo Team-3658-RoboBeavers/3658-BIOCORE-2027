@@ -1,0 +1,9 @@
+pluginManagement {
+    repositories {
+        maven { url = uri("https://frcmaven.wpi.edu/artifactory/release-2027") }
+        maven { url = uri("https://frcmaven.wpi.edu/artifactory/development-2027") }
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = "3658-BIOCORE-2027"

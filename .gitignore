@@ -1,0 +1,24 @@
+.gradle/
+build/
+bin/
+out/
+.classpath
+.project
+.settings/
+*.class
+*.log
+*.wpilog
+*.hoot
+.DS_Store
+Thumbs.db
+
+# Keep the shared WPILib editor configuration, but ignore personal files.
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+
+# Do not commit local credentials or secrets.
+.env
+.env.*
+*.pem
+*.key
