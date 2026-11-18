@@ -34,12 +34,6 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void teleopInit() {
-    // Alpha 8 scopes these defaults and bindings to teleop, removing them on mode change.
-    container.configureTeleop();
-  }
-
-  @Override
   public void utilityInit() {
     scheduler.cancelAll();
   }

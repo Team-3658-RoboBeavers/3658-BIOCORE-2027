@@ -40,6 +40,9 @@ the team's electrical, mechanical, and programming leads.
 - [ ] Confirm positive rotation is counterclockwise.
 - [ ] Verify the Pigeon2 yaw sign and field-centric heading reset.
 - [ ] Test brake behavior and disabled behavior.
+- [ ] Hold A while pressing heading reset; verify the brake remains active.
+- [ ] Repeatedly disable and enable with teleop still selected; verify one response per button press.
+- [ ] Verify drive and steer motors neutralize when requests exit and utility mode is selected.
 - [ ] Perform slow robot-centric floor tests before field-centric driving.
 - [ ] Recheck fasteners, wheel tread, wiring, temperatures, and logs.
 

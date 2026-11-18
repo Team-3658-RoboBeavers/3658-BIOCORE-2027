@@ -80,3 +80,30 @@ not install or upgrade the IDE, robot image, Driver Station, or firmware.
 - CI now runs the build and tests on Linux and Windows.
 - No deployment or hardware motion testing was performed. The CAN assignments, swerve constants,
   camera names/transforms, controller ports, and hardware verification gates are unchanged.
+
+## Follow-up compatibility review (November 17, 2026)
+
+The Alpha 8, Phoenix, and PhotonLib pins were rechecked against the current official matrix.
+The Systemcore deployment target, Java 25 configuration, five CAN assignments, motor configuration,
+camera assignment, and commissioning gates remain unchanged.
+
+Three lifecycle fixes were added:
+
+- Scope teleop defaults and bindings to an enabled Controls.Teleop command, rather than repeatedly
+  installing robot-mode-scoped bindings from teleopInit. This prevents binding accumulation when
+  disabled and enabled again without changing the selected mode.
+- Give the held brake higher priority than heading reset.
+- Replace Idle-only cleanup with a custom Phoenix request that explicitly applies NeutralOut
+  to both motors of every module. The idle default uses the same neutral request.
+
+The lifecycle regression test now covers those interactions and checks all eight simulated motor
+control modes after active driving. The original migration's Windows and Ubuntu Actions jobs passed:
+[Migration build](https://github.com/github3658/3658-BIOCORE-2027/actions/runs/44224109871).
+
+Primary API references:
+[Commands v3 scopes](https://docs.wpilib.org/en/latest/docs/software/commandbased/commands-v3/scopes.html),
+[Phoenix Idle semantics](https://api.ctr-electronics.com/phoenix6/latest/java/com/ctre/phoenix6/swerve/SwerveRequest.Idle.html),
+and [custom swerve requests](https://v6.docs.ctr-electronics.com/en/stable/docs/api-reference/mechanisms/swerve/swerve-requests.html).
+
+Local verification: gradlew.bat build --no-daemon passed with all four tests, including the
+expanded native lifecycle and motor-mode checks. No physical hardware was deployed or tested.

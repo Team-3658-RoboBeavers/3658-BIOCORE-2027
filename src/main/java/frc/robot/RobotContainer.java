@@ -13,6 +13,7 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import org.wpilib.command3.Command;
 import org.wpilib.command3.button.CommandXboxController;
+import org.wpilib.command3.button.RobotModeTriggers;
 import org.wpilib.math.util.MathUtil;
 
 public class RobotContainer implements AutoCloseable {
@@ -41,9 +42,19 @@ public class RobotContainer implements AutoCloseable {
 
   public RobotContainer() {
     drivetrain.setDefaultCommand(drivetrain.idle());
+    // One enabled teleop session owns all teleop bindings/defaults. Its command scope also
+    // ends on disable, even when the Driver Station leaves the selected robot mode unchanged.
+    RobotModeTriggers.teleop()
+        .whileTrue(
+            Command.noRequirements(
+                    coroutine -> {
+                      configureTeleop();
+                      coroutine.park();
+                    })
+                .named("Controls.Teleop"));
   }
 
-  public void configureTeleop() {
+  private void configureTeleop() {
     drivetrain.setDefaultCommand(
         drivetrain.applyRequest(
             () ->
@@ -57,7 +68,7 @@ public class RobotContainer implements AutoCloseable {
 
     driver.a()
         .whileTrue(
-            drivetrain.applyRequest(() -> brakeRequest, "Swerve.Brake", Command.DEFAULT_PRIORITY));
+            drivetrain.applyRequest(() -> brakeRequest, "Swerve.Brake", Command.DEFAULT_PRIORITY + 1));
     driver.leftBumper().onTrue(drivetrain.resetFieldHeading());
   }
 

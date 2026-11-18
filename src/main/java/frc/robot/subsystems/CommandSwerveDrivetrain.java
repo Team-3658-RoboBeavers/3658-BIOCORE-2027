@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
@@ -20,6 +22,16 @@ import org.wpilib.system.RobotController;
 public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder>
     implements Mechanism {
   private static final double SIM_LOOP_PERIOD_SECONDS = 0.004;
+  // A custom request replaces the previous odometry-thread request and explicitly neutralizes
+  // both axes. Phoenix Idle alone does not change the modules' previously applied state.
+  private final NeutralOut neutralOutput = new NeutralOut();
+  private final SwerveRequest neutralRequest =
+      (parameters, modules) -> {
+        for (var module : modules) {
+          module.apply(neutralOutput, neutralOutput);
+        }
+        return StatusCode.OK;
+      };
   private Notifier simNotifier;
   private double lastSimTime;
 
@@ -35,7 +47,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
   public Command applyRequest(Supplier<SwerveRequest> request, String name, int priority) {
     return runRepeatedly(() -> setControl(request.get()))
         .withPriority(priority)
-        .whenExited(() -> setControl(new SwerveRequest.Idle()))
+        .whenExited(() -> setControl(neutralRequest))
         .named(name);
   }
 
@@ -46,7 +58,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
 
   @Override
   public Command idle() {
-    return runRepeatedly(() -> setControl(new SwerveRequest.Idle()))
+    return runRepeatedly(() -> setControl(neutralRequest))
         .withPriority(Command.LOWEST_PRIORITY)
         .named("Swerve.Idle");
   }
