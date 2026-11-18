@@ -4,10 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.Trajectory;
 import com.ctre.phoenix6.signals.ControlModeValue;
 import frc.robot.auto.ChoreoPaths;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -116,8 +119,8 @@ class CommandsV3LifecycleTest {
       var follow = drivetrain.followChoreo(
           trajectory, true, true, messages::add, () -> completed.set(true));
       assertTrue(scheduler.schedule(follow).successful());
-      double deadline = Timer.getTimestamp() + 4;
-      while (scheduler.isScheduledOrRunning(follow) && Timer.getTimestamp() < deadline) {
+      double deadline = Timer.getMonotonicTimestamp() + 4;
+      while (scheduler.isScheduledOrRunning(follow) && Timer.getMonotonicTimestamp() < deadline) {
         tick(container);
         Timer.delay(0.02);
       }
@@ -135,6 +138,43 @@ class CommandsV3LifecycleTest {
       tick(container);
       scheduler.cancel(follow);
       assertFalse(completed.get());
+      awaitMotorModes(drivetrain, true);
+
+      // Own the drivetrain for the full routine and cancel its nested child as a unit.
+      selection.setString("Simulation: 0.25 m straight");
+      TunableRegistry.update();
+      var routine = container.getAutonomousCommand();
+      assertTrue(routine.requires(drivetrain));
+      assertTrue(scheduler.schedule(routine).successful());
+      tick(container);
+      assertTrue(scheduler.getRunningCommands().stream()
+          .anyMatch(command -> command.name().startsWith("Swerve.Choreo[")));
+      scheduler.cancel(routine);
+      tick(container);
+      assertFalse(scheduler.isScheduledOrRunning(routine));
+      assertFalse(scheduler.getRunningCommands().stream()
+          .anyMatch(command -> command.name().startsWith("Swerve.Choreo[")));
+      awaitMotorModes(drivetrain, true);
+
+      // Resume the scheduler after a stopped path's deadline. Being at the goal is not
+      // success when the deadline has already passed.
+      var stationary = new Trajectory<>("Deadline",
+          List.of(
+              new SwerveSample(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, new double[4], new double[4]),
+              new SwerveSample(0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0, new double[4], new double[4])),
+          List.of(0), List.of());
+      completed.set(false);
+      messages.clear();
+      var late = drivetrain.followChoreo(
+          stationary, true, true, messages::add, () -> completed.set(true));
+      assertTrue(scheduler.schedule(late).successful());
+      scheduler.run();
+      assertTrue(scheduler.isScheduledOrRunning(late));
+      Timer.delay(stationary.getTotalTime() + Constants.Autonomous.SETTLE_SECONDS + 0.15);
+      tick(container);
+      assertFalse(completed.get());
+      assertTrue(messages.stream().anyMatch(message -> message.contains("endpoint timeout")),
+          messages.toString());
       awaitMotorModes(drivetrain, true);
 
       setMode(RobotMode.UTILITY, true);
@@ -199,7 +239,7 @@ class CommandsV3LifecycleTest {
   }
 
   private void awaitMotorModes(CommandSwerveDrivetrain drivetrain, boolean neutral) {
-    double deadline = Timer.getTimestamp() + 2.0;
+    double deadline = Timer.getMonotonicTimestamp() + 2.0;
     boolean matching;
     do {
       matching = true;
@@ -214,7 +254,7 @@ class CommandsV3LifecycleTest {
         return;
       }
       Timer.delay(0.01);
-    } while (Timer.getTimestamp() < deadline);
+    } while (Timer.getMonotonicTimestamp() < deadline);
     assertTrue(matching, neutral ? "All eight motors must be neutral" : "Drive must first be active");
   }
 

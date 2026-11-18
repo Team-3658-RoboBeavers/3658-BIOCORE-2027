@@ -114,3 +114,21 @@ expanded native lifecycle and motor-mode checks. No physical hardware was deploy
 See [Choreo Autonomous](Choreo-Autonomous.md) for the GUI version, unverified starter model, export
 workflow, chooser, explicit alliance files, and physical acceptance requirements. The runtime contains
 Commands v3 only. No real path following or force feedforward verification flag is enabled.
+
+## Choreo review follow-up
+
+The Alpha 8 / Choreo Alpha 3 / Phoenix version set remains unchanged and compatible. The native v3
+routine now holds the drivetrain requirement across its entire child-command sequence. Regression
+tests cover nested cancellation and confirm neutral output on cancellation.
+
+Raw export validation prevents missing fields or library-filtered event markers from being silently
+accepted. Kinematic checks include Choreo's acceleration-integrated intervals, with a small export
+rounding allowance and unchanged hard controller caps. Runtime samples are checked before output.
+
+Elapsed timing uses WPILib's monotonic clock. Deadline checks precede endpoint success, and invalid
+odometry timestamps fail stopped. Tests include a delayed scheduler at an already-reached goal.
+No physical commissioning flags, bus assignments, hardware configuration, or dependency pins changed.
+
+References:
+[WPILib Alpha 8 Timer source](https://github.com/wpilibsuite/allwpilib/blob/v2027.0.0-alpha-8/wpilibj/src/main/java/org/wpilib/system/Timer.java),
+[Choreo Alpha 3 interpolation](https://github.com/SleipnirGroup/Choreo/blob/v2027.0.0-alpha-3/choreolib/src/main/java/choreo/trajectory/SwerveSample.java).

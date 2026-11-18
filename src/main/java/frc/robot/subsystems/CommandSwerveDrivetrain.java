@@ -100,13 +100,19 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
           var request = new SwerveRequest.ApplyFieldVelocity()
               .withDriveRequestType(com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType.Velocity)
               .withForwardPerspective(SwerveRequest.ForwardPerspectiveValue.BlueAlliance);
-          double start = Timer.getTimestamp();
+          double start = Timer.getMonotonicTimestamp();
           report.accept("Running: " + trajectory.name());
           while (RobotState.isAutonomousEnabled()) {
-            double elapsed = Timer.getTimestamp() - start;
+            double elapsed = Timer.getMonotonicTimestamp() - start;
+            // A late scheduler iteration must not report success after the deadline.
+            if (ChoreoController.timedOut(elapsed, trajectory.getTotalTime())) {
+              report.accept("Aborted: endpoint timeout in " + trajectory.name());
+              return;
+            }
             var state = getState();
-            if (Utils.getCurrentTimeSeconds() - state.Timestamp
-                > Constants.Autonomous.MAX_ODOMETRY_AGE_SECONDS) {
+            double age = Utils.getCurrentTimeSeconds() - state.Timestamp;
+            if (!Double.isFinite(age) || age < 0
+                || age > Constants.Autonomous.MAX_ODOMETRY_AGE_SECONDS) {
               report.accept("Aborted: stale drivetrain odometry");
               return;
             }
@@ -117,6 +123,12 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
             }
             var sample = trajectory.sampleAt(Math.min(elapsed, trajectory.getTotalTime()), false)
                 .orElseThrow();
+            try {
+              ChoreoPaths.validateSample(sample);
+            } catch (IllegalArgumentException ex) {
+              report.accept("Aborted: " + ex.getMessage());
+              return;
+            }
             if (pose.getTranslation().getDistance(sample.getPose().getTranslation())
                 > Constants.Autonomous.MAX_TRACKING_ERROR_METERS) {
               report.accept("Aborted: excessive tracking error in " + trajectory.name());
@@ -127,10 +139,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
               onSuccess.run();
               return;
             }
-            if (elapsed > trajectory.getTotalTime() + Constants.Autonomous.SETTLE_SECONDS) {
-              report.accept("Aborted: endpoint timeout in " + trajectory.name());
-              return;
-            }
+
             var velocity = ChoreoController.calculate(pose, sample);
             // Suppress force feedforward at the velocity cap; do not counteract limiting with
             // an unscaled optimizer force. Force use also needs separate physical-model approval.

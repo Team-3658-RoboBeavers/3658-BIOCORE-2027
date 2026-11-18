@@ -21,6 +21,12 @@ public final class ChoreoController {
             Constants.Autonomous.MAX_OMEGA_RAD_PER_SEC));
   }
 
+  /** Monotonic duration/deadline check; invalid clock data fails stopped too. */
+  public static boolean timedOut(double elapsed, double trajectoryDuration) {
+    return !Double.isFinite(elapsed) || elapsed < 0
+        || elapsed > trajectoryDuration + Constants.Autonomous.SETTLE_SECONDS;
+  }
+
   public static boolean atGoal(Pose2d pose, SwerveSample goal) {
     return pose.getTranslation().getDistance(goal.getPose().getTranslation())
             <= Constants.Autonomous.POSITION_TOLERANCE_METERS

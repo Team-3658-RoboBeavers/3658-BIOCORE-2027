@@ -90,7 +90,7 @@ public final class ChoreoAutos implements AutoCloseable {
   }
 
   private Command sequence(String name, List<Trajectory<SwerveSample>> paths, boolean simulationOnly) {
-    return Command.noRequirements(coroutine -> {
+    return Command.requiring(drivetrain).executing(coroutine -> {
           for (int i = 0; i < paths.size(); i++) {
             var succeeded = new AtomicBoolean(false);
             coroutine.await(drivetrain.followChoreo(

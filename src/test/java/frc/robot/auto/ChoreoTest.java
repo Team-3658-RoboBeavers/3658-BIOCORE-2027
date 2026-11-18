@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import choreo.trajectory.EventMarker;
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
+import com.google.gson.JsonParser;
 import frc.robot.Constants;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,6 +61,49 @@ class ChoreoTest {
             List.of(0), List.of(new EventMarker(0.5, "Shoot")))));
     assertFalse(Constants.Autonomous.PATH_FOLLOWING_VERIFIED);
     assertFalse(Constants.Autonomous.FORCE_FEEDFORWARD_VERIFIED);
+  }
+
+  @Test
+  void rejectsUnsafeInterpolationEvenWhenEveryStoredVelocityIsWithinLimits() {
+    var accelerating = new SwerveSample(0, 0, 0, 0, 0, 0, 0, 2, 0, 0,
+        new double[4], new double[4]);
+    var spinning = new SwerveSample(0, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+        new double[4], new double[4]);
+    var stopped = sample(1, 0, 0, 0);
+    var roundedStart = new SwerveSample(0, 0, 0, 0, 0, 0, 0, 0.50001, 0, 0,
+        new double[4], new double[4]);
+    var roundedPeak = new SwerveSample(1, 0.25, 0, 0, 0.5, 0, 0, -0.5, 0, 0,
+        new double[4], new double[4]);
+    assertDoesNotThrow(() -> ChoreoPaths.validate(
+        path(roundedStart, roundedPeak, sample(2, 0.5, 0, 0))));
+    assertThrows(IllegalArgumentException.class,
+        () -> ChoreoPaths.validate(path(accelerating, stopped)));
+    assertThrows(IllegalArgumentException.class,
+        () -> ChoreoPaths.validate(path(spinning, stopped)));
+    assertThrows(IllegalArgumentException.class, () -> ChoreoPaths.validateSample(
+        sample(0, Double.POSITIVE_INFINITY, 0, 0)));
+  }
+
+  @Test
+  void rawExportChecksPreventDefaultedSamplesAndSilentlyDiscardedEvents() throws Exception {
+    var original = JsonParser.parseString(Files.readString(
+        Path.of("src/main/deploy/choreo/SimulationStraight.traj"))).getAsJsonObject();
+    assertDoesNotThrow(() -> ChoreoPaths.validateExport(original));
+
+    var missingVelocity = original.deepCopy();
+    missingVelocity.getAsJsonObject("trajectory").getAsJsonArray("samples")
+        .get(0).getAsJsonObject().remove("vx");
+    assertThrows(IllegalArgumentException.class, () -> ChoreoPaths.validateExport(missingVelocity));
+
+    var shortForces = original.deepCopy();
+    shortForces.getAsJsonObject("trajectory").getAsJsonArray("samples").get(0)
+        .getAsJsonObject().getAsJsonArray("fx").remove(3);
+    assertThrows(IllegalArgumentException.class, () -> ChoreoPaths.validateExport(shortForces));
+
+    var discardedEvent = original.deepCopy();
+    discardedEvent.getAsJsonArray("events").add(JsonParser.parseString(
+        "{\"name\":\"Shoot\",\"event\":null}"));
+    assertThrows(IllegalArgumentException.class, () -> ChoreoPaths.validateExport(discardedEvent));
   }
 
   @Test

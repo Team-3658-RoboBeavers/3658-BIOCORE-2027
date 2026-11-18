@@ -100,7 +100,12 @@ does not automatically appear in the chooser. Remove obsolete files deliberately
 ChoreoPaths preloads/validates registered exports during robot construction. Missing files, bad
 schema/type, invalid samples, nonfinite data, non-monotonic times, unsupported events, unsafe
 start/end motion, or excessive speed/duration make that option hold stopped with a status reason.
-No file parsing occurs in the periodic trajectory-following loop.
+Raw exports must contain all ten numeric kinematic fields and exactly four finite forces per axis.
+Nonempty raw event arrays are rejected before Choreo can discard malformed/unsupported markers or
+default missing fields to zero. Validation checks acceleration-integrated intervals, not only
+stored knots. A 1e-4 rounding allowance applies to exported linear/angular velocity comparisons;
+the controller's actual velocity caps are unchanged. Runtime samples are checked again before
+motor requests. No file parsing occurs in the periodic trajectory-following loop.
 
 ## 5. Register the routine in Commands v3
 
@@ -130,11 +135,13 @@ At enable, the routine snapshots the chosen option and alliance. Unknown allianc
 Blue selects the blue files; red selects the red files. Paths are sampled without additional
 flipping. No dashboard/alliance change can switch the route midway through an enabled routine.
 
-The root v3 coroutine awaits each drivetrain command. Pose resets once, to the first leg's initial
-pose; later legs continue odometry. Completion requires endpoint position/heading tolerance.
+The root v3 coroutine requires the drivetrain for its full lifetime and awaits each child
+drivetrain command, sharing requirements under v3 parent/child semantics. Pose resets once, to the
+first leg's initial pose; later legs continue odometry. Completion requires endpoint position/heading tolerance.
 Failure does not advance to the next leg. After completion/failure the routine awaits the stopped
 brake command until autonomous exits. Disabling, changing mode, or canceling the root cancels its
-children and neutralizes the drivetrain.
+children and neutralizes the drivetrain. Ownership is retained between legs and during the final
+stopped hold.
 
 When adding scoring/intake/indexer actions later, create requirement-owning mechanism commands
 and compose with coroutine.await/fork according to their intended lifetime. The alpha Choreo v2
@@ -175,7 +182,9 @@ Default Hold stopped remains available. Disable/re-enable to restart from the fi
 The native regression test uses the same deploy fixture and Phoenix desktop physics. It checks
 successful completion, explicit cancellation, and motor neutralization. Other tests check
 interpolation, limits, endpoint/sequence validation, shortest heading feedback, capped combined
-velocity, explicit alliance choice, unknown-alliance rejection, and absence of Commands v2.
+velocity, explicit alliance choice, unknown-alliance rejection, and absence of Commands v2. Additional regression checks cover raw missing fields/force arrays,
+discarded events, unsafe between-knot interpolation, whole-routine ownership/cancellation, and
+late scheduler resumption at an already-reached goal.
 
 Simulation validates code behavior, not physical tuning, field collision clearance, or an
 accurate drivetrain model. The GUI itself is not launched by the build/test task.
@@ -194,7 +203,11 @@ requirements pass in reviewed commissioning changes. FORCE_FEEDFORWARD_VERIFIED 
 4. Measure and tune autonomous feedback with conservative caps and force feedforward off.
    Initially P gains are 1.5 for translation and 3.0 for heading. Endpoint tolerance is 0.10 m /
    0.10 rad, with a 0.5 s settling window. Tracking error above 0.75 m, invalid pose, or odometry
-   older than 0.25 s aborts following. Record/approve these values; they are not hardware ratings.
+   older than 0.25 s aborts following. Invalid/future odometry timestamps also abort. Elapsed
+   duration uses Timer.getMonotonicTimestamp(); a non-monotonic application clock cannot shift
+   trajectory timing. The deadline is checked before endpoint success, so late scheduler
+   resumption cannot turn a timeout into a successful leg. Record/approve these values; they are
+   not hardware ratings.
 5. The summed velocity feedforward and pose correction are vector-capped; angular output is capped.
    Phoenix receives closed-loop field velocity. Optimizer wheel force feedforward is optional,
    defaults off, and uses [FL, FR, BL, BR] forces in newtons only after separate model approval.

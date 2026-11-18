@@ -101,10 +101,25 @@ used because the official 2027 geometry/symmetry is not verified.
 
 The follower owns the drivetrain through Commands v3, uses capped field-relative velocity and
 pose feedback, resets pose once per routine, checks endpoint completion, and neutralizes output
-on exit/cancellation. Tests exercise real Phoenix desktop physics and dashboard selection.
+on exit/cancellation. The full routine owns the drivetrain across leg transitions and while holding
+stopped; child followers share that ownership through Commands v3. Tests exercise real Phoenix
+desktop physics, dashboard selection, and cancellation of the complete command tree.
 Physical path following requires both drivetrain and autonomous commissioning; optimizer force
 feedforward has its own approval gate and is off by default. No mechanism actions or pose fusion
 are added. See the guide for the exact limits, measurements, and release checklist.
+
+The Choreo compatibility review also hardened export validation and timing: raw exports must
+contain every numeric sample field and four force entries per axis, and embedded events are
+rejected before the library can discard them. Validation checks Choreo's acceleration-integrated
+intervals as well as saved samples; the actual sampled command is checked again at runtime.
+Small export rounding tolerance does not change the controller's hard velocity caps.
+
+Autonomous uses WPILib's monotonic clock. Timeout takes precedence over endpoint success after
+a delayed scheduler iteration; invalid timing or odometry timestamps abort with neutral output.
+The regression suite covers those cases, malformed exports, unsafe interpolation, nested
+cancellation, and the existing controller/mode transitions. The compatible Alpha 8 / Choreo
+Alpha 3 / Phoenix pins, CAN assignments, cameras, controllers, and commissioning gates remain
+unchanged.
 
 ## Four-camera vision
 
