@@ -7,6 +7,7 @@ Checked November 17, 2026 against the official Systemcore testing matrix and rel
 | Component | Repository version | Requirement |
 | --- | --- | --- |
 | WPILib / GradleRIO | 2027.0.0-alpha-8 | Latest release listed by SystemcoreTesting; includes Commands v3 mode scopes and disabled safety fixes |
+| ChoreoLib / GUI | 2027.0.0-alpha-3 | Official Alpha 7/8-compatible transitional release; low-level APIs with our v3 follower |
 | Commands | v3, bundled with Alpha 8 | Official CommandsV3 manifest; CommandsV2 removed |
 | CameraServer / OpenCV | Alpha 8 / 2027-4.13.0-3 | Official CameraServer manifest supplies cscore and OpenCV native dependencies needed by PhotonLib |
 | Systemcore OS | Image 14 or later | Alpha 8 release requirement; select an image for the actual hardware revision |
@@ -35,9 +36,9 @@ not install or upgrade the IDE, robot image, Driver Station, or firmware.
   CAN_S3 scoring reserve, CAN_S4 auxiliary. No CANivore or Motioncore is introduced.
 - FIRST's rule preview permits CANivore for additional buses in 2027 as a transition measure;
   consult the final Game Manual and Team Updates at Kickoff.
-- The testing matrix now lists compatible PathPlanner and Choreo releases for Alpha 7/8.
-  Neither is added: this project has no selected autonomous routes or released 2027 field layout.
-  Autonomous holds the drivetrain stopped in the brake posture until routines are designed.
+- Choreo Alpha 3 is now pinned for trajectory loading/sampling with a native Commands v3 follower.
+  Its AutoFactory/AutoRoutine/AutoChooser helpers remain Commands v2 and are unused. PathPlanner
+  remains absent. Hold stopped is the default; real routes require explicit registration and commissioning.
 - Phoenix and PhotonLib remain pinned because the current official matrix and PhotonVision Dev
   manifest still identify the existing versions. PhotonLib's floating latest URL is not used.
 - All of this remains prerelease software. The existing real-hardware startup guard and
@@ -107,3 +108,9 @@ and [custom swerve requests](https://v6.docs.ctr-electronics.com/en/stable/docs/
 
 Local verification: gradlew.bat build --no-daemon passed with all four tests, including the
 expanded native lifecycle and motor-mode checks. No physical hardware was deployed or tested.
+
+## Choreo preparation
+
+See [Choreo Autonomous](Choreo-Autonomous.md) for the GUI version, unverified starter model, export
+workflow, chooser, explicit alliance files, and physical acceptance requirements. The runtime contains
+Commands v3 only. No real path following or force feedforward verification flag is enabled.

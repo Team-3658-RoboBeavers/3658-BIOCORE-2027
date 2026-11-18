@@ -1,0 +1,84 @@
+{
+  "name": "3658-BIOCORE-2027-UNVERIFIED",
+  "version": 2,
+  "type": "Swerve",
+  "variables": {
+    "expressions": {},
+    "poses": {}
+  },
+  "config": {
+    "frontLeft": {
+      "x": {
+        "val": 0.254,
+        "exp": "10 in"
+      },
+      "y": {
+        "val": 0.254,
+        "exp": "10 in"
+      }
+    },
+    "backLeft": {
+      "x": {
+        "val": -0.254,
+        "exp": "-10 in"
+      },
+      "y": {
+        "val": 0.254,
+        "exp": "10 in"
+      }
+    },
+    "mass": {
+      "val": 60,
+      "exp": "60 kg"
+    },
+    "inertia": {
+      "val": 6,
+      "exp": "6 kg m ^ 2"
+    },
+    "gearing": {
+      "val": 6.026785714285714,
+      "exp": "(54/14) * (25/32) * (30/15)"
+    },
+    "radius": {
+      "val": 0.0508,
+      "exp": "2 in"
+    },
+    "vmax": {
+      "val": 400,
+      "exp": "400 rad / s"
+    },
+    "tmax": {
+      "val": 1,
+      "exp": "1 N * m"
+    },
+    "cof": {
+      "val": 1,
+      "exp": "1"
+    },
+    "bumper": {
+      "side": {
+        "val": 0.45,
+        "exp": "0.45 m"
+      },
+      "back": {
+        "val": 0.45,
+        "exp": "0.45 m"
+      },
+      "front": {
+        "val": 0.45,
+        "exp": "0.45 m"
+      }
+    },
+    "differentialTrackWidth": {
+      "val": 0.508,
+      "exp": "20 in"
+    }
+  },
+  "generationFeatures": [],
+  "codegen": {
+    "root": null,
+    "useChoreoLib": true,
+    "genVars": false,
+    "genTrajData": false
+  }
+}

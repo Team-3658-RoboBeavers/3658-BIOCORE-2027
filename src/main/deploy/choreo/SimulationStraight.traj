@@ -1,0 +1,14 @@
+{
+  "name": "SimulationStraight",
+  "version": 3,
+  "events": [],
+  "trajectory": {
+    "sampleType": "Swerve",
+    "splits": [0],
+    "samples": [
+      {"t":0,"x":0,"y":0,"heading":0,"vx":0,"vy":0,"omega":0,"ax":0.25,"ay":0,"alpha":0,"fx":[0,0,0,0],"fy":[0,0,0,0]},
+      {"t":1,"x":0.125,"y":0,"heading":0,"vx":0.25,"vy":0,"omega":0,"ax":-0.25,"ay":0,"alpha":0,"fx":[0,0,0,0],"fy":[0,0,0,0]},
+      {"t":2,"x":0.25,"y":0,"heading":0,"vx":0,"vy":0,"omega":0,"ax":0,"ay":0,"alpha":0,"fx":[0,0,0,0],"fy":[0,0,0,0]}
+    ]
+  }
+}

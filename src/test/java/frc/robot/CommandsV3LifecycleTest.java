@@ -5,17 +5,22 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.ctre.phoenix6.signals.ControlModeValue;
+import frc.robot.auto.ChoreoPaths;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import org.wpilib.backend.NetworkTablesTunableBackend;
 import org.wpilib.command3.Command;
 import org.wpilib.command3.Scheduler;
 import org.wpilib.command3.SchedulerEvent;
 import org.wpilib.driverstation.internal.DriverStationBackend;
 import org.wpilib.hardware.hal.HAL;
 import org.wpilib.hardware.hal.RobotMode;
+import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.tunable.TunableRegistry;
 import org.wpilib.simulation.DriverStationSim;
 import org.wpilib.simulation.XboxControllerSim;
 import org.wpilib.system.Timer;
@@ -30,6 +35,9 @@ class CommandsV3LifecycleTest {
     DriverStationBackend.clearUserProgramStarted();
     DriverStationSim.resetData();
     setMode(RobotMode.UNKNOWN, false);
+    TunableRegistry.reset();
+    var tunableBackend = new NetworkTablesTunableBackend(NetworkTableInstance.getDefault(), "/Tunables");
+    TunableRegistry.registerBackend("", tunableBackend);
     var scheduled = new ArrayList<String>();
     scheduler.addEventListener(
         event -> {
@@ -92,6 +100,43 @@ class CommandsV3LifecycleTest {
       assertEquals(Set.of("Autonomous.HoldStopped"), runningNames());
       scheduler.cancel(autonomous);
 
+      var selection = NetworkTableInstance.getDefault()
+          .getTable("Tunables/Autonomous/Routine").getEntry("selected/tune");
+      selection.setString("Simulation: 0.25 m straight");
+      TunableRegistry.update();
+      assertEquals("Autonomous.Choreo[SimulationStraight]", container.getAutonomousCommand().name());
+      selection.setString("Unknown routine");
+      TunableRegistry.update();
+      assertEquals("Autonomous.HoldStopped", container.getAutonomousCommand().name());
+
+      // Run the real v3 follower against Phoenix's desktop physics, then verify cleanup.
+      var trajectory = ChoreoPaths.load("SimulationStraight");
+      var messages = new ArrayList<String>();
+      var completed = new AtomicBoolean(false);
+      var follow = drivetrain.followChoreo(
+          trajectory, true, true, messages::add, () -> completed.set(true));
+      assertTrue(scheduler.schedule(follow).successful());
+      double deadline = Timer.getTimestamp() + 4;
+      while (scheduler.isScheduledOrRunning(follow) && Timer.getTimestamp() < deadline) {
+        tick(container);
+        Timer.delay(0.02);
+      }
+      assertTrue(completed.get(), messages.toString());
+      assertFalse(scheduler.isScheduledOrRunning(follow));
+      awaitMotorModes(drivetrain, true);
+
+      // Cancel mid-path. Cancellation must neutralize the motors and never signal success.
+      completed.set(false);
+      follow = drivetrain.followChoreo(
+          trajectory, true, true, messages::add, () -> completed.set(true));
+      assertTrue(scheduler.schedule(follow).successful());
+      tick(container);
+      Timer.delay(0.05);
+      tick(container);
+      scheduler.cancel(follow);
+      assertFalse(completed.get());
+      awaitMotorModes(drivetrain, true);
+
       setMode(RobotMode.UTILITY, true);
       tick(container);
       assertEquals(Set.of("Swerve.Idle"), runningNames());
@@ -130,6 +175,7 @@ class CommandsV3LifecycleTest {
       setMode(RobotMode.UNKNOWN, false);
       scheduler.run(); // Remove the teleop scope and restore the global idle default.
       DriverStationBackend.clearUserProgramStarted();
+      TunableRegistry.reset();
     }
   }
 
@@ -144,6 +190,7 @@ class CommandsV3LifecycleTest {
 
   private void tick(RobotContainer container) {
     DriverStationSim.notifyNewData();
+    TunableRegistry.update();
     // Default commands may be queued for the following scheduler iteration.
     for (int i = 0; i < 3; i++) {
       container.updateInputs();

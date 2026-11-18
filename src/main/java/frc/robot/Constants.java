@@ -21,6 +21,24 @@ public final class Constants {
     private Operator() {}
   }
 
+  public static final class Autonomous {
+    /** Separate release gate: drivetrain commissioning alone does not qualify autonomous motion. */
+    public static final boolean PATH_FOLLOWING_VERIFIED = false;
+    public static final boolean FORCE_FEEDFORWARD_VERIFIED = false;
+    // Conservative initial limits; replace only with measured/approved limits and regenerated paths.
+    public static final double MAX_SPEED_MPS = 0.5;
+    public static final double MAX_OMEGA_RAD_PER_SEC = 0.5;
+    public static final double MAX_DURATION_SECONDS = 15.0;
+    public static final double TRANSLATION_KP = 1.5;
+    public static final double HEADING_KP = 3.0;
+    public static final double POSITION_TOLERANCE_METERS = 0.10;
+    public static final double HEADING_TOLERANCE_RADIANS = 0.10;
+    public static final double SETTLE_SECONDS = 0.5;
+    public static final double MAX_TRACKING_ERROR_METERS = 0.75;
+    public static final double MAX_ODOMETRY_AGE_SECONDS = 0.25;
+    private Autonomous() {}
+  }
+
   public static final class Vision {
     public static final String FRONT_NAME = "3658-front";
     public static final String REAR_NAME = "3658-rear";

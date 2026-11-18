@@ -22,6 +22,8 @@ Completed work includes:
 - Four PhotonVision camera clients on two Orange Pi 5 processors, with frame-receipt health checks.
 - The official CameraServer dependency, supplying cscore and OpenCV native libraries required
   for PhotonLib startup on desktop and Systemcore.
+- Choreo Alpha 3 trajectory loading, a native Commands v3 follower, routine selection, explicit
+  blue/red route pairs, a simulation fixture, and an unverified GUI starter project.
 - Native lifecycle regression coverage and GitHub Actions builds on Windows and Ubuntu.
 - CAN wiring, vision setup, software compatibility, and hardware commissioning documentation.
 
@@ -66,7 +68,7 @@ See [CAN Networks](docs/CAN-Networks.md).
 | Hold driver A | Brake posture; takes priority over heading reset |
 | Press driver left bumper | Reset field-centric heading when brake is not holding ownership |
 | Operator Xbox | Reserved for future mechanism controls |
-| Autonomous enabled | Hold brake posture; no path or scoring routine yet |
+| Autonomous enabled | Hold stopped by default; explicitly registered Choreo routines after commissioning |
 | Teleop enabled | Run the teleop session and lowest-priority driving default |
 | Utility enabled | Neutral-output idle default |
 | Disabled | Cancel actuator commands and end the teleop session |
@@ -83,6 +85,26 @@ teleop period. That command installs the driving default and button bindings, th
 Its command scope ends when teleop is disabled or deselected, allowing a fresh session on
 re-enable without accumulating defaults or bindings. Drivetrain commands declare ownership,
 have telemetry names, and explicitly neutralize output on exit.
+
+## Choreo autonomous authoring
+
+Follow [Choreo Autonomous](docs/Choreo-Autonomous.md) to install the matching GUI, open
+[choreo/3658-BIOCORE-2027-UNVERIFIED.chor](choreo/3658-BIOCORE-2027-UNVERIFIED.chor),
+replace model placeholders, solve paths, copy exports into src/main/deploy/choreo, and register
+blue/red stop-to-stop routine sequences in ChoreoAutos.
+
+The dashboard selector is /Tunables/Autonomous/Routine; execution status is /Autonomous/status.
+Hold stopped is the default. A 0.25 m simulation-only example exercises the follower without
+inventing a 2027 game route. Registered routes preload and validate at startup; invalid files,
+unknown alliance, tracking faults, or timeouts fail stopped. Built-in alliance flipping is not
+used because the official 2027 geometry/symmetry is not verified.
+
+The follower owns the drivetrain through Commands v3, uses capped field-relative velocity and
+pose feedback, resets pose once per routine, checks endpoint completion, and neutralizes output
+on exit/cancellation. Tests exercise real Phoenix desktop physics and dashboard selection.
+Physical path following requires both drivetrain and autonomous commissioning; optimizer force
+feedforward has its own approval gate and is off by default. No mechanism actions or pose fusion
+are added. See the guide for the exact limits, measurements, and release checklist.
 
 ## Four-camera vision
 
@@ -107,6 +129,7 @@ is installed, and Constants.Vision.POSE_FUSION_VERIFIED remains false. Follow
 | --- | --- |
 | WPILib / GradleRIO | 2027.0.0-alpha-8 |
 | Commands | v3 from the matching WPILib release |
+| ChoreoLib / Choreo GUI | 2027.0.0-alpha-3 |
 | Java | 25 |
 | Gradle wrapper | 9.4.1 |
 | Systemcore image | 14 or later, for the actual hardware revision |
@@ -121,8 +144,8 @@ Alpha 8 is an in-place compatible upgrade; build.gradle selects the actual Alpha
 CommandsV2.json has been removed. Phoenix and PhotonLib remain pinned to the versions identified
 by the official Alpha 7/8 compatibility matrix and PhotonVision Dev release.
 
-PathPlanner and Choreo have compatible prerelease versions listed in the current matrix, but
-neither is included because autonomous routines have not been selected.
+Choreo Alpha 3 is now included through its low-level trajectory APIs. Its transitional Commands v2
+auto helpers are intentionally unused. PathPlanner remains absent.
 
 Version sources and upgrade requirements are in
 [Software Compatibility](docs/Software-Compatibility.md), including the
@@ -185,13 +208,16 @@ change this project's CAN assignments or selected hardware.
 - RobotContainer.java: hardware ownership, controller setup, teleop session, input polling,
   and autonomous brake placeholder.
 - RobotCAN.java: five Systemcore CAN bus assignments.
+- auto/: Choreo loading/validation, feedback math, chooser, alliance selection, and v3 sequences.
+- choreo/: editable, unverified Choreo GUI robot project and authoring instructions.
+- src/main/deploy/choreo/: deployed trajectory exports and the simulation-only fixture.
 - Constants.java: controller ports, camera names/transforms, proposed swerve IDs, and safety gates.
 - generated/TunerConstants.java: provisional Phoenix MK5i L2 configuration.
 - subsystems/CommandSwerveDrivetrain.java: Commands v3 wrapper, neutral output, and simulation thread.
 - subsystems/VisionSubsystem.java: camera clients, health polling, and resource cleanup.
 - subsystems/IntakeSubsystem.java and IndexerSubsystem.java: unfinished mechanism boundaries.
 - src/test/java/frc/robot/: architecture and native lifecycle regression tests.
-- vendordeps/: pinned Commands v3, CameraServer, Phoenix, and PhotonLib manifests.
+- vendordeps/: pinned Commands v3, CameraServer, Phoenix, PhotonLib, and Choreo manifests.
 - .github/workflows/build.yml: Windows and Ubuntu CI.
 - docs/: CAN, vision, commissioning, and software compatibility records.
 
@@ -219,6 +245,9 @@ checks remain blocked until measured constants, approved limits, required instru
 bench caps, and the guard's prerequisites are satisfied. The guide also explains how the
 test that currently asserts the startup flag is false must be updated in a future reviewed
 commissioning change. This documentation update does not add test-mode code or certify hardware.
+
+The bench guide now links to the Choreo-specific authoring, model, field-frame, and autonomous
+acceptance requirements. A passed general drivetrain test does not clear the autonomous gate.
 
 ## Remaining commissioning work
 

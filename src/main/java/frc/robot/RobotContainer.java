@@ -6,6 +6,7 @@ import static org.wpilib.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import frc.robot.auto.ChoreoAutos;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.IndexerSubsystem;
@@ -39,6 +40,8 @@ public class RobotContainer implements AutoCloseable {
       new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
   private final SwerveRequest.SwerveDriveBrake brakeRequest =
       new SwerveRequest.SwerveDriveBrake();
+
+  private final ChoreoAutos autos = new ChoreoAutos(drivetrain, this::holdStopped);
 
   public RobotContainer() {
     drivetrain.setDefaultCommand(drivetrain.idle());
@@ -79,6 +82,7 @@ public class RobotContainer implements AutoCloseable {
 
   @Override
   public void close() {
+    autos.close();
     vision.close();
     drivetrain.close();
   }
@@ -88,7 +92,10 @@ public class RobotContainer implements AutoCloseable {
   }
 
   public Command getAutonomousCommand() {
-    // TODO: add 2027 autonomous routines after the game is released and routines are designed.
+    return autos.selectedCommand();
+  }
+
+  private Command holdStopped() {
     return drivetrain.applyRequest(
         () -> brakeRequest, "Autonomous.HoldStopped", Command.DEFAULT_PRIORITY);
   }

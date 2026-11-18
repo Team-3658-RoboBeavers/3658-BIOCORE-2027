@@ -178,6 +178,10 @@ current/heat, or output after disable. **Record:** module worksheet and plots.
 
 ## Step 7 — Generate constants and qualify an integrated candidate
 
+For Choreo model measurements, trajectory registration, field coordinates, and separate autonomous
+acceptance tests, also follow [Choreo Autonomous](Choreo-Autonomous.md). General drivetrain
+acceptance does not clear PATH_FOLLOWING_VERIFIED or FORCE_FEEDFORWARD_VERIFIED.
+
 1. Export compatible Tuner constants after individual module validation. Cross-check bus, IDs,
    offsets/units, coordinates, inversions, X60/X44 arrangements, ratios/coupling, feedback/license,
    gains/current limits, wheel radius, and speed-at-12-V assumptions against the record.
@@ -229,7 +233,8 @@ Use bench caps and a reviewed scheduler event logger/debugger. No command dashbo
    output telemetry, not just command names. Measure response time against the approved limit.
 6. Perform five disable/enable cycles with teleop still selected (**team starting count**).
    Each A press produces one brake response; repeat a cycle holding A through disable/re-enable.
-7. Enabled autonomous must hold Autonomous.HoldStopped without translation or driver control.
+7. With the default Hold stopped option, enabled autonomous must hold Autonomous.HoldStopped
+   without translation or driver control. Selected Choreo routines require their separate procedure.
    Utility must use neutral-output Swerve.Idle with no teleop button responses.
 8. Exercise operator controls: they currently have no bindings and must not drive any mechanism.
    Finish disabled before touching the setup.
