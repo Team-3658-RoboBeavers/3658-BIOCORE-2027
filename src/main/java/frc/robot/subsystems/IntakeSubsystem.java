@@ -1,6 +1,6 @@
 package frc.robot.subsystems;
 
-import org.wpilib.command2.SubsystemBase;
+import org.wpilib.command3.Mechanism;
 
 /**
  * Intake ownership boundary for Systemcore CAN_S1.
@@ -8,4 +8,4 @@ import org.wpilib.command2.SubsystemBase;
  * <p>TODO: add hardware only after the motor controller, sensor set, gearing, current limits, and
  * safe directions are selected.
  */
-public class IntakeSubsystem extends SubsystemBase {}
+public class IntakeSubsystem implements Mechanism {}

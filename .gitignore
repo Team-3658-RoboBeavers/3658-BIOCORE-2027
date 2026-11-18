@@ -22,3 +22,7 @@ Thumbs.db
 .env.*
 *.pem
 *.key
+
+# Phoenix desktop simulation state and signal logs.
+ctre_sim/
+logs/

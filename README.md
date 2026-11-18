@@ -5,12 +5,11 @@ Java robot project for Team 3658's 2027 FIRST Systemcore robot.
 ## Current status
 
 This repository is a **pre-season, compile-target scaffold**, not deployable robot code. As of
-November 1, 2026:
+November 17, 2026:
 
-- WPILib 2027 is still alpha software. This project is pinned to the locally verified
-  `2027.0.0-alpha-7` toolchain; WPILib Alpha 8 is newer and should be evaluated as a coordinated
-  upgrade.
-- Phoenix 6 is pinned to `26.70.0-alpha-2`, the release documented for WPILib Alpha 7.
+- WPILib 2027 is still alpha software. This project uses Commands v3 and
+  `2027.0.0-alpha-8`, the latest release listed in the official Systemcore testing matrix.
+- Phoenix 6 is pinned to `26.70.0-alpha-2`, the release documented for WPILib Alpha 7/8.
 - PhotonLib is pinned to a development build for `2027_alpha7` because no stable compatible
   PhotonLib release is available.
 - The 2027 game, official field AprilTag layout, final robot dimensions, CANcoder offsets, and
@@ -56,6 +55,26 @@ Linux/macOS:
 The checked-in wrapper and vendor manifests make CI repeatable, subject to the availability of the
 alpha Maven artifacts. A successful desktop build proves source/API compatibility only. It does not
 verify Systemcore deployment, CAN wiring, firmware, directions, calibration, or mechanism safety.
+
+## Commands v3 behavior
+
+Mechanisms implement org.wpilib.command3.Mechanism. The TimedRobot entry point calls
+RobotContainer.updateInputs() before Scheduler.getDefault().run(); vision health therefore
+updates in disabled, autonomous, teleop, and utility modes.
+
+Teleop installs a lowest-priority field-centric driving default and the existing Xbox USB 0
+bindings: hold A for brake, press left bumper to reset field heading. Alpha 8 scopes these
+bindings and the teleop default to teleop mode. Autonomous holds the brake posture; utility
+falls back to idle. Exiting a drivetrain request sends an Idle request. Disabled operation
+cancels actuator commands. The Xbox on USB 1 remains reserved for future mechanism controls.
+
+The native lifecycle test starts the actual Phoenix drivetrain and four PhotonCamera clients,
+then checks driver/operator separation, brake/release, heading reset, mode changes, disabled
+cancellation, and teleop reentry. CameraServer.json supplies the cscore/OpenCV runtime libraries
+needed by PhotonLib; the cameras still run on the two Orange Pi 5 processors.
+
+See [Software Compatibility](docs/Software-Compatibility.md) for robot image and Driver Station
+requirements and the latest FIRST Systemcore availability and cabling updates.
 
 ## Project map
 

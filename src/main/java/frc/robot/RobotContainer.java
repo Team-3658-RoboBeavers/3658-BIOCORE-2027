@@ -11,12 +11,11 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
-import org.wpilib.command2.Command;
-import org.wpilib.command2.Commands;
-import org.wpilib.command2.button.CommandXboxController;
+import org.wpilib.command3.Command;
+import org.wpilib.command3.button.CommandXboxController;
 import org.wpilib.math.util.MathUtil;
 
-public class RobotContainer {
+public class RobotContainer implements AutoCloseable {
   private static final double MAX_SPEED_METERS_PER_SECOND =
       MetersPerSecond.of(5.0).in(MetersPerSecond);
   private static final double MAX_ANGULAR_RATE_RADIANS_PER_SECOND =
@@ -29,7 +28,6 @@ public class RobotContainer {
       new CommandXboxController(Constants.Operator.OPERATOR_PORT);
 
   private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-  @SuppressWarnings("unused")
   private final VisionSubsystem vision = new VisionSubsystem();
   @SuppressWarnings("unused")
   private final IntakeSubsystem intake = new IntakeSubsystem();
@@ -42,10 +40,10 @@ public class RobotContainer {
       new SwerveRequest.SwerveDriveBrake();
 
   public RobotContainer() {
-    configureBindings();
+    drivetrain.setDefaultCommand(drivetrain.idle());
   }
 
-  private void configureBindings() {
+  public void configureTeleop() {
     drivetrain.setDefaultCommand(
         drivetrain.applyRequest(
             () ->
@@ -53,10 +51,25 @@ public class RobotContainer {
                     .withVelocityX(-deadband(driver.getLeftY()) * MAX_SPEED_METERS_PER_SECOND)
                     .withVelocityY(-deadband(driver.getLeftX()) * MAX_SPEED_METERS_PER_SECOND)
                     .withRotationalRate(
-                        -deadband(driver.getRightX()) * MAX_ANGULAR_RATE_RADIANS_PER_SECOND)));
+                        -deadband(driver.getRightX()) * MAX_ANGULAR_RATE_RADIANS_PER_SECOND),
+            "Swerve.TeleopDrive",
+            Command.LOWEST_PRIORITY));
 
-    driver.a().whileTrue(drivetrain.applyRequest(() -> brakeRequest));
-    driver.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+    driver.a()
+        .whileTrue(
+            drivetrain.applyRequest(() -> brakeRequest, "Swerve.Brake", Command.DEFAULT_PRIORITY));
+    driver.leftBumper().onTrue(drivetrain.resetFieldHeading());
+  }
+
+  /** Poll all four cameras before commands run, including while disabled. */
+  public void updateInputs() {
+    vision.updateInputs();
+  }
+
+  @Override
+  public void close() {
+    vision.close();
+    drivetrain.close();
   }
 
   private static double deadband(double input) {
@@ -64,7 +77,8 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    // TODO: add 2027 autonomous routines after the game and path library compatibility are known.
-    return Commands.none();
+    // TODO: add 2027 autonomous routines after the game is released and routines are designed.
+    return drivetrain.applyRequest(
+        () -> brakeRequest, "Autonomous.HoldStopped", Command.DEFAULT_PRIORITY);
   }
 }

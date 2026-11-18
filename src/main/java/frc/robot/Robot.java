@@ -4,47 +4,50 @@
 
 package frc.robot;
 
-import org.wpilib.command2.Command;
-import org.wpilib.command2.CommandScheduler;
+import org.wpilib.command3.Command;
+import org.wpilib.command3.Scheduler;
 import org.wpilib.framework.TimedRobot;
 
 public class Robot extends TimedRobot {
-  private final RobotContainer container;
+  private final RobotContainer container = new RobotContainer();
+  private final Scheduler scheduler = Scheduler.getDefault();
   private Command autonomousCommand;
-
-  public Robot() {
-    container = new RobotContainer();
-  }
 
   @Override
   public void robotPeriodic() {
-    CommandScheduler.getInstance().run();
+    // Mechanisms no longer receive automatic Subsystem.periodic() callbacks in v3.
+    container.updateInputs();
+    scheduler.run();
   }
 
   @Override
   public void autonomousInit() {
     autonomousCommand = container.getAutonomousCommand();
-    if (autonomousCommand != null) {
-      CommandScheduler.getInstance().schedule(autonomousCommand);
-    }
+    scheduler.schedule(autonomousCommand);
   }
 
   @Override
   public void autonomousExit() {
     if (autonomousCommand != null) {
-      autonomousCommand.cancel();
+      scheduler.cancel(autonomousCommand);
     }
   }
 
   @Override
   public void teleopInit() {
-    if (autonomousCommand != null) {
-      autonomousCommand.cancel();
-    }
+    // Alpha 8 scopes these defaults and bindings to teleop, removing them on mode change.
+    container.configureTeleop();
   }
 
   @Override
   public void utilityInit() {
-    CommandScheduler.getInstance().cancelAll();
+    scheduler.cancelAll();
+  }
+
+  @Override
+  public void close() {
+    scheduler.cancelAll();
+    container.close();
+    super.close();
   }
 }

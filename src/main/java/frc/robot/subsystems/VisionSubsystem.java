@@ -3,14 +3,14 @@ package frc.robot.subsystems;
 import frc.robot.Constants;
 import java.util.List;
 import org.photonvision.PhotonCamera;
-import org.wpilib.command2.SubsystemBase;
+import org.wpilib.command3.Mechanism;
 import org.wpilib.system.Timer;
 
 /**
  * Owns the four PhotonVision clients. Pose fusion is intentionally disabled until camera transforms
  * and the official 2027 field layout are verified.
  */
-public class VisionSubsystem extends SubsystemBase {
+public class VisionSubsystem implements Mechanism, AutoCloseable {
   private static final double STALE_SECONDS = 1.0;
 
   private final List<CameraHealth> cameras =
@@ -20,13 +20,17 @@ public class VisionSubsystem extends SubsystemBase {
           new CameraHealth(Constants.Vision.LEFT_NAME, "Orange Pi B"),
           new CameraHealth(Constants.Vision.RIGHT_NAME, "Orange Pi B"));
 
-  @Override
-  public void periodic() {
+  public void updateInputs() {
     for (CameraHealth camera : cameras) {
       if (!camera.camera.getAllUnreadResults().isEmpty()) {
         camera.lastFrameSeconds = Timer.getTimestamp();
       }
     }
+  }
+
+  @Override
+  public void close() {
+    cameras.forEach(camera -> camera.camera.close());
   }
 
   public List<CameraStatus> getCameraStatuses() {

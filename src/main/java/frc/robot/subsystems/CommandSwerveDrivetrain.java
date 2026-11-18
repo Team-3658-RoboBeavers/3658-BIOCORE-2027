@@ -8,8 +8,8 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import java.util.function.Supplier;
-import org.wpilib.command2.Command;
-import org.wpilib.command2.Subsystem;
+import org.wpilib.command3.Command;
+import org.wpilib.command3.Mechanism;
 import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
@@ -18,7 +18,7 @@ import org.wpilib.system.RobotController;
 
 /** Minimal command-based wrapper around the Phoenix 6 swerve drivetrain. */
 public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder>
-    implements Subsystem {
+    implements Mechanism {
   private static final double SIM_LOOP_PERIOD_SECONDS = 0.004;
   private Notifier simNotifier;
   private double lastSimTime;
@@ -32,8 +32,23 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
     }
   }
 
-  public Command applyRequest(Supplier<SwerveRequest> request) {
-    return run(() -> setControl(request.get()));
+  public Command applyRequest(Supplier<SwerveRequest> request, String name, int priority) {
+    return runRepeatedly(() -> setControl(request.get()))
+        .withPriority(priority)
+        .whenExited(() -> setControl(new SwerveRequest.Idle()))
+        .named(name);
+  }
+
+  /** Runs once while owning the drivetrain, so heading reset cannot race another command. */
+  public Command resetFieldHeading() {
+    return run(coroutine -> seedFieldCentric()).named("Swerve.ResetFieldHeading");
+  }
+
+  @Override
+  public Command idle() {
+    return runRepeatedly(() -> setControl(new SwerveRequest.Idle()))
+        .withPriority(Command.LOWEST_PRIORITY)
+        .named("Swerve.Idle");
   }
 
   public void acceptVisionMeasurement(
