@@ -31,7 +31,7 @@ for the current commit's results.
 
 Real-hardware startup remains blocked while
 Constants.Swerve.HARDWARE_CONFIGURATION_VERIFIED is false. Replace provisional Tuner constants
-and complete [Robot Commissioning](docs/Robot-Commissioning.md) before enabling physical hardware.
+and complete [Bench Test and Commissioning Guide](docs/Robot-Commissioning.md) before enabling physical hardware.
 Vision pose fusion is unimplemented and remains marked unverified.
 
 ## Hardware and CAN allocation
@@ -195,6 +195,31 @@ change this project's CAN assignments or selected hardware.
 - .github/workflows/build.yml: Windows and Ubuntu CI.
 - docs/: CAN, vision, commissioning, and software compatibility records.
 
+## Step-by-step bench testing
+
+Start with the [Bench Test and Commissioning Guide](docs/Robot-Commissioning.md). It replaces
+the short checklist with an ordered procedure for our Systemcore, MK5i L2 X60/X44 drivetrain,
+13 CAN_S0 devices, four cameras on two Orange Pi 5 processors, and two Xbox controllers.
+
+The stages cover software and approved limits; unpowered inspection and CAN termination;
+disabled discovery; geometry/gearing; CANcoder and Pigeon2 calibration; individual module
+tests; constants review; integrated startup; controller and mode transitions; camera
+calibration/performance/recovery; and reserved buses. Loaded floor measurements, future
+vision fusion, and release approval are identified separately.
+
+Each stage has PASS/FAIL/BLOCKED criteria and measurements to record. Copyable worksheets
+capture actual versions, serials/IDs, resistance, voltage/current/temperature, geometry,
+ratios/offsets/inversions, output limits, command transitions, camera transforms/calibration,
+FPS/latency, recovery times, defects/retests, and student/mentor signoff. Blank values remain
+unmeasured, and proposed team starting targets are distinguished from manufacturer ratings.
+
+The guide preserves the real-hardware startup guard. Early discovery/calibration requires
+a separately reviewed Systemcore-compatible diagnostic/Tuner workflow. Integrated motion
+checks remain blocked until measured constants, approved limits, required instrumentation,
+bench caps, and the guard's prerequisites are satisfied. The guide also explains how the
+test that currently asserts the startup flag is false must be updated in a future reviewed
+commissioning change. This documentation update does not add test-mode code or certify hardware.
+
 ## Remaining commissioning work
 
 1. Install and record matching Systemcore OS, Driver Station, Phoenix firmware, Tuner X, and
@@ -207,4 +232,4 @@ change this project's CAN assignments or selected hardware.
 6. Install the official field layout, implement pose rejection and uncertainty handling, and
    validate vision before enabling fusion.
 7. Complete disabled-on-blocks checks, brake/reset and repeated enable tests, controlled floor
-   tests, and the student/mentor release review in the commissioning checklist.
+   tests, and the student/mentor release review in the bench guide.
