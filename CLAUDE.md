@@ -50,7 +50,8 @@ These stay `false` until the evidence in docs/Robot-Commissioning.md is recorded
 - `Constants.Autonomous.PATH_FOLLOWING_VERIFIED` and `FORCE_FEEDFORWARD_VERIFIED`.
 - `Constants.Vision.POSE_FUSION_VERIFIED` (pose fusion is not implemented).
 
-`ArchitectureTest` asserts these. Changing one needs a separate reviewed change that also updates
+`ArchitectureTest.unfinishedCalibrationCannotBeMistakenForVerified` asserts all four are
+`false`. Changing one needs a separate reviewed change that also updates
 that test with the commissioning evidence. Never just flip the boolean or skip the test.
 
 ## Code conventions

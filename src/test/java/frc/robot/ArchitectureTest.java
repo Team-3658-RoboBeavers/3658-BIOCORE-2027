@@ -20,8 +20,18 @@ class ArchitectureTest {
 
   @Test
   void unfinishedCalibrationCannotBeMistakenForVerified() {
-    assertFalse(Constants.Swerve.HARDWARE_CONFIGURATION_VERIFIED);
-    assertFalse(Constants.Vision.POSE_FUSION_VERIFIED);
+    // Each gate may change only in a reviewed commissioning PR that replaces its assertion with a
+    // check of the recorded evidence (see docs/Robot-Commissioning.md and Choreo-Autonomous.md).
+    assertFalse(
+        Constants.Swerve.HARDWARE_CONFIGURATION_VERIFIED,
+        "Drivetrain hardware is not commissioned");
+    assertFalse(
+        Constants.Autonomous.PATH_FOLLOWING_VERIFIED,
+        "Physical autonomous path following is not commissioned");
+    assertFalse(
+        Constants.Autonomous.FORCE_FEEDFORWARD_VERIFIED,
+        "Choreo wheel-force feedforward model is not approved");
+    assertFalse(Constants.Vision.POSE_FUSION_VERIFIED, "Vision pose fusion is not implemented");
   }
 
   @Test
