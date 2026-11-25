@@ -99,7 +99,7 @@ Three lifecycle fixes were added:
 
 The lifecycle regression test now covers those interactions and checks all eight simulated motor
 control modes after active driving. The original migration's Windows and Ubuntu Actions jobs passed:
-[Migration build](https://github.com/github3658/3658-BIOCORE-2027/actions/runs/44224109871).
+[Migration build](https://github.com/Team-3658-RoboBeavers/3658-BIOCORE-2027/actions/runs/44224109871).
 
 Primary API references:
 [Commands v3 scopes](https://docs.wpilib.org/en/latest/docs/software/commandbased/commands-v3/scopes.html),

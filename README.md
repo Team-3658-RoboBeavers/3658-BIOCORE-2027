@@ -28,7 +28,7 @@ Completed work includes:
 - CAN wiring, vision setup, software compatibility, and hardware commissioning documentation.
 
 The previous migration commit passed both GitHub Actions jobs. See the
-[Actions history](https://github.com/github3658/3658-BIOCORE-2027/actions/workflows/build.yml)
+[Actions history](https://github.com/Team-3658-RoboBeavers/3658-BIOCORE-2027/actions/workflows/build.yml)
 for the current commit's results.
 
 Real-hardware startup remains blocked while
